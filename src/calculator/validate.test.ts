@@ -18,7 +18,7 @@ describe("validateSelections", () => {
         { quantity: "power", value: -1, unit: "W" },
       ),
     ).toContainEqual({
-      field: "input",
+      field: "second",
       message: "Linear input values cannot be negative.",
     });
   });
@@ -32,4 +32,3 @@ describe("validateSelections", () => {
     ).toEqual([]);
   });
 });
-

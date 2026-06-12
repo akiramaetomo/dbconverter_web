@@ -1,22 +1,22 @@
 import { quantityGroup, type SelectedValue } from "./model";
 
 export interface ValidationError {
-  field: "fixed" | "input";
+  field: "first" | "second";
   message: string;
 }
 
 export function validateSelections(
-  fixed: SelectedValue,
-  input: SelectedValue,
+  first: SelectedValue,
+  second: SelectedValue,
 ): ValidationError[] {
   const errors: ValidationError[] = [];
-  validateValue(fixed, "fixed", errors);
-  validateValue(input, "input", errors);
+  validateValue(first, "first", errors);
+  validateValue(second, "second", errors);
 
-  if (quantityGroup[fixed.quantity] === quantityGroup[input.quantity]) {
+  if (quantityGroup[first.quantity] === quantityGroup[second.quantity]) {
     errors.push({
-      field: "input",
-      message: "FIXED and INPUT must use different quantity groups.",
+      field: "second",
+      message: "Select values from different quantity groups.",
     });
   }
 
@@ -38,4 +38,3 @@ function validateValue(
     errors.push({ field, message: "Linear input values cannot be negative." });
   }
 }
-

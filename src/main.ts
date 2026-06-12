@@ -21,8 +21,7 @@ interface RowState {
 }
 
 const state = {
-  fixed: "impedance" as Quantity,
-  input: "voltage" as Quantity,
+  selected: ["impedance", "voltage"] as Quantity[],
   active: "voltage" as Quantity,
   rows: Object.fromEntries(
     quantities.map((quantity) => [
@@ -54,14 +53,14 @@ app.innerHTML = `
 
     <section class="calculator" aria-label="dB converter">
       <div class="table-header" aria-hidden="true">
-        <span>VALUE</span><span>FIXED</span><span>INPUT</span><span>UNIT</span><span>NUMBER</span>
+        <span></span><span>INPUT</span><span>UNIT</span><span>NUMBER</span>
       </div>
       <div id="quantity-rows"></div>
       <p class="status" id="status" role="status"></p>
     </section>
 
     <section class="keypad" aria-label="Calculator keypad">
-      ${["7", "8", "9", "BS", "4", "5", "6", "C/AC", "1", "2", "3", "e", ".", "0", "-", "Ans"]
+      ${["7", "8", "9", "BS", "4", "5", "6", "C", "1", "2", "3", "e", ".", "0", "-", "Ans"]
         .map((key) => `<button type="button" data-key="${key}" class="${key === "Ans" ? "answer" : ""}">${key}</button>`)
         .join("")}
     </section>
@@ -79,6 +78,12 @@ calculateAndRender();
 document.querySelectorAll<HTMLButtonElement>("[data-key]").forEach((button) => {
   button.addEventListener("click", () => handleKey(button.dataset.key ?? ""));
 });
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.isComposing) {
+    event.preventDefault();
+    calculateAndRender();
+  }
+});
 
 function renderRows(): void {
   rowsElement.innerHTML = quantities
@@ -86,12 +91,8 @@ function renderRows(): void {
       (quantity) => `
         <div class="quantity-row group-${quantity.group}" data-row="${quantity.id}">
           <span class="quantity-label">${quantity.label}</span>
-          <label class="role-choice" title="Use ${quantity.label} as the fixed value">
-            <input type="radio" name="fixed" value="${quantity.id}" />
-            <span></span>
-          </label>
-          <label class="role-choice" title="Use ${quantity.label} as the current input">
-            <input type="radio" name="input" value="${quantity.id}" />
+          <label class="role-choice" title="Use ${quantity.label} as an input">
+            <input type="checkbox" name="selected" value="${quantity.id}" />
             <span></span>
           </label>
           <select data-unit="${quantity.id}" aria-label="${quantity.label} unit">
@@ -112,11 +113,10 @@ function renderRows(): void {
     )
     .join("");
 
-  rowsElement.querySelectorAll<HTMLInputElement>('input[name="fixed"]').forEach((radio) => {
-    radio.addEventListener("change", () => selectFixed(radio.value as Quantity));
-  });
-  rowsElement.querySelectorAll<HTMLInputElement>('input[name="input"]').forEach((radio) => {
-    radio.addEventListener("change", () => selectInput(radio.value as Quantity));
+  rowsElement.querySelectorAll<HTMLInputElement>('input[name="selected"]').forEach((checkbox) => {
+    checkbox.addEventListener("change", () =>
+      toggleSelection(checkbox.value as Quantity, checkbox.checked),
+    );
   });
   rowsElement.querySelectorAll<HTMLInputElement>("[data-value]").forEach((input) => {
     const quantity = input.dataset.value as Quantity;
@@ -134,39 +134,51 @@ function renderRows(): void {
   });
 }
 
-function selectFixed(quantity: Quantity): void {
-  state.fixed = quantity;
-  state.active = quantity;
-  state.rows[quantity].calculated = false;
-  if (quantityGroup[state.input] === quantityGroup[quantity]) {
-    state.input = firstAvailableInput(quantity);
-    state.rows[state.input].calculated = false;
+function toggleSelection(quantity: Quantity, checked: boolean): void {
+  if (checked) {
+    selectQuantity(quantity);
+  } else {
+    state.selected = state.selected.filter((selected) => selected !== quantity);
+    state.active = state.selected.at(-1) ?? quantity;
   }
-  clearErrors();
-  renderState();
-  focusValue(quantity);
-}
-
-function selectInput(quantity: Quantity): void {
-  if (quantityGroup[quantity] === quantityGroup[state.fixed]) {
-    return;
-  }
-  state.input = quantity;
-  state.active = quantity;
   state.rows[quantity].calculated = false;
   clearErrors();
   renderState();
-  focusValue(quantity);
+  if (checked) {
+    focusValue(quantity);
+  }
 }
 
 function activateValue(quantity: Quantity): void {
+  if (!state.selected.includes(quantity)) {
+    selectQuantity(quantity);
+  }
   state.active = quantity;
   state.rows[quantity].calculated = false;
-  if (quantity !== state.fixed && quantityGroup[quantity] !== quantityGroup[state.fixed]) {
-    state.input = quantity;
-  }
   clearErrors();
   renderState();
+}
+
+function selectQuantity(quantity: Quantity): void {
+  if (state.selected.includes(quantity)) {
+    state.active = quantity;
+    return;
+  }
+
+  const sameGroup = state.selected.find(
+    (selected) => quantityGroup[selected] === quantityGroup[quantity],
+  );
+  const replaced =
+    sameGroup ??
+    (state.selected.length >= 2 && state.selected.includes(state.active) ? state.active : undefined);
+
+  if (replaced) {
+    const replacedIndex = state.selected.indexOf(replaced);
+    state.selected.splice(replacedIndex, 1, quantity);
+  } else {
+    state.selected.push(quantity);
+  }
+  state.active = quantity;
 }
 
 function changeUnit(quantity: Quantity, newUnit: string): void {
@@ -177,7 +189,6 @@ function changeUnit(quantity: Quantity, newUnit: string): void {
     row.text = formatJavaGeneral(fromBaseValue(quantity, base, newUnit));
   }
   row.unit = newUnit;
-  row.calculated = false;
   clearErrors();
   renderState();
 }
@@ -188,11 +199,15 @@ function handleKey(key: string): void {
     return;
   }
 
+  if (!state.selected.includes(state.active)) {
+    statusElement.textContent = "Select two input values.";
+    return;
+  }
   const row = state.rows[state.active];
   row.calculated = false;
   if (key === "BS") {
     row.text = row.text.slice(0, -1);
-  } else if (key === "C/AC") {
+  } else if (key === "C") {
     row.text = "";
   } else {
     row.text += key;
@@ -204,17 +219,23 @@ function handleKey(key: string): void {
 
 function calculateAndRender(): void {
   clearErrors();
-  const fixed = selectedValue(state.fixed);
-  const input = selectedValue(state.input);
-  const errors = [...parseErrors(fixed, "fixed"), ...parseErrors(input, "input")];
+  if (state.selected.length !== 2) {
+    statusElement.textContent = "Select two input values.";
+    renderState();
+    return;
+  }
+  const [firstQuantity, secondQuantity] = state.selected as [Quantity, Quantity];
+  const first = selectedValue(firstQuantity);
+  const second = selectedValue(secondQuantity);
+  const errors = [...parseErrors(first, "first"), ...parseErrors(second, "second")];
 
   if (errors.length === 0) {
-    errors.push(...validateSelections(fixed.value, input.value));
+    errors.push(...validateSelections(first.value, second.value));
   }
 
   if (errors.length > 0) {
     for (const error of errors) {
-      const quantity = error.field === "fixed" ? state.fixed : state.input;
+      const quantity = error.field === "first" ? firstQuantity : secondQuantity;
       state.rows[quantity].error = error.message;
     }
     statusElement.textContent = "Check the highlighted input.";
@@ -223,7 +244,7 @@ function calculateAndRender(): void {
   }
 
   try {
-    const result = calculate(fixed.value, input.value);
+    const result = calculate(first.value, second.value);
     applyResults(result.values);
     statusElement.textContent = "Calculated.";
   } catch {
@@ -242,8 +263,8 @@ function selectedValue(quantity: Quantity): { raw: string; value: SelectedValue 
 
 function parseErrors(
   selected: ReturnType<typeof selectedValue>,
-  field: "fixed" | "input",
-): Array<{ field: "fixed" | "input"; message: string }> {
+  field: "first" | "second",
+): Array<{ field: "first" | "second"; message: string }> {
   if (selected.raw.trim() === "" || !Number.isFinite(selected.value.value)) {
     return [{ field, message: "Enter a numeric value." }];
   }
@@ -252,7 +273,7 @@ function parseErrors(
 
 function applyResults(values: BaseValues): void {
   for (const quantity of quantities) {
-    if (quantity.id === state.fixed || quantity.id === state.input) {
+    if (state.selected.includes(quantity.id)) {
       state.rows[quantity.id].calculated = false;
       continue;
     }
@@ -266,36 +287,30 @@ function renderState(): void {
   for (const quantity of quantities) {
     const row = state.rows[quantity.id];
     const rowElement = getElement<HTMLDivElement>(`[data-row="${quantity.id}"]`, rowsElement);
-    const fixedRadio = getElement<HTMLInputElement>(
-      `input[name="fixed"][value="${quantity.id}"]`,
-      rowElement,
-    );
-    const inputRadio = getElement<HTMLInputElement>(
-      `input[name="input"][value="${quantity.id}"]`,
+    const selectedCheckbox = getElement<HTMLInputElement>(
+      `input[name="selected"][value="${quantity.id}"]`,
       rowElement,
     );
     const input = getElement<HTMLInputElement>(`[data-value="${quantity.id}"]`, rowElement);
     const unit = getElement<HTMLSelectElement>(`[data-unit="${quantity.id}"]`, rowElement);
     const error = getElement<HTMLSpanElement>(`[data-error="${quantity.id}"]`, rowElement);
 
-    fixedRadio.checked = quantity.id === state.fixed;
-    inputRadio.checked = quantity.id === state.input;
-    inputRadio.disabled = quantityGroup[quantity.id] === quantityGroup[state.fixed];
+    const selected = state.selected.includes(quantity.id);
+    selectedCheckbox.checked = selected;
     input.value = row.text;
+    input.readOnly = !selected;
     unit.value = row.unit;
     error.textContent = row.error;
-    rowElement.classList.toggle("is-fixed", quantity.id === state.fixed);
-    rowElement.classList.toggle("is-input", quantity.id === state.input);
+    rowElement.classList.toggle("is-selected", selected);
     rowElement.classList.toggle("is-active", quantity.id === state.active);
     rowElement.classList.toggle("is-calculated", row.calculated);
     rowElement.classList.toggle("has-error", row.error !== "");
   }
 
-  summaryElement.textContent = `FIXED ${quantityById[state.fixed].label}  +  INPUT ${quantityById[state.input].label}`;
-}
-
-function firstAvailableInput(fixed: Quantity): Quantity {
-  return quantities.find((quantity) => quantityGroup[quantity.id] !== quantityGroup[fixed])!.id;
+  summaryElement.textContent =
+    state.selected.length === 2
+      ? `INPUT ${state.selected.map((quantity) => quantityById[quantity].label).join(", ")}`
+      : `INPUT ${state.selected.length} / 2`;
 }
 
 function clearErrors(): void {

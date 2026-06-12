@@ -10,7 +10,6 @@
   --muted: #a6b0b4;
   --result: #87b98b;
   --error: #d07a78;
-  --fixed: #c4a66a;
   --input: #80aeb5;
   color: var(--text);
   background: var(--page);
@@ -64,9 +63,11 @@ p {
 }
 
 h1 {
-  font-size: clamp(1.65rem, 5vw, 2.3rem);
+  color: #a58d62;
+  font-size: clamp(2rem, 6vw, 2.78rem);
   font-weight: 650;
   letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 #00000080;
 }
 
 .eyebrow,
@@ -75,7 +76,7 @@ h1 {
 .status,
 .field-error {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.99rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -97,7 +98,7 @@ h1 {
 .table-header,
 .quantity-row {
   display: grid;
-  grid-template-columns: 2.8rem 3.1rem 3.1rem minmax(4.4rem, 0.7fr) minmax(8rem, 2fr);
+  grid-template-columns: 2.8rem 4rem minmax(4.4rem, 0.7fr) minmax(8rem, 2fr);
   align-items: center;
   gap: 0.35rem;
 }
@@ -139,16 +140,8 @@ h1 {
 .group-current::before { background: var(--current); }
 .group-power::before { background: var(--power); }
 
-.quantity-row.is-fixed {
-  border-color: var(--fixed);
-}
-
-.quantity-row.is-input {
+.quantity-row.is-selected {
   border-color: var(--input);
-}
-
-.quantity-row.is-fixed.is-input {
-  border-color: var(--error);
 }
 
 .quantity-row.is-active {
@@ -157,7 +150,7 @@ h1 {
 
 .quantity-label {
   color: #eef1f2;
-  font-size: 1.1rem;
+  font-size: 1.47rem;
   font-weight: 700;
   text-align: center;
 }
@@ -184,19 +177,9 @@ h1 {
 }
 
 .role-choice input:checked + span {
-  border-color: var(--fixed);
-  box-shadow: inset 0 0 0 0.27rem #15191b;
-  background: var(--fixed);
-}
-
-.role-choice input[name="input"]:checked + span {
   border-color: var(--input);
+  box-shadow: inset 0 0 0 0.27rem #15191b;
   background: var(--input);
-}
-
-.role-choice input:disabled + span {
-  opacity: 0.18;
-  cursor: not-allowed;
 }
 
 select,
@@ -212,6 +195,7 @@ select,
 select {
   padding: 0 0.45rem;
   cursor: pointer;
+  font-size: 1.35rem;
   text-align: center;
 }
 
@@ -222,12 +206,16 @@ select {
 .value-cell input {
   padding: 0 0.7rem;
   font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
-  font-size: 1.05rem;
+  font-size: 1.42rem;
 }
 
 .value-cell input:focus {
   border-color: var(--input);
   box-shadow: 0 0 0 2px #80aeb526;
+}
+
+.value-cell input:read-only {
+  cursor: default;
 }
 
 .is-calculated .value-cell input {
@@ -246,7 +234,7 @@ select {
   max-width: calc(100% - 0.7rem);
   overflow: hidden;
   color: var(--error);
-  font-size: 0.48rem;
+  font-size: 0.7rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -265,13 +253,13 @@ select {
 }
 
 .keypad button {
-  min-height: 3.1rem;
+  min-height: 3.7rem;
   border: 1px solid #ffffff14;
   border-radius: 0.65rem;
   background: linear-gradient(#30373a, #272d30);
   box-shadow: 0 0.18rem 0 #101315;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.52rem;
 }
 
 .keypad button:hover {
@@ -305,7 +293,7 @@ select {
   }
 
   h1 {
-    font-size: clamp(1.25rem, 6vw, 1.55rem);
+    font-size: clamp(1.52rem, 7.25vw, 1.88rem);
     line-height: 1.1;
   }
 
@@ -317,7 +305,7 @@ select {
   .table-header,
   .quantity-row {
     grid-template-columns:
-      2rem 2.45rem 2.45rem
+      2rem 3.4rem
       minmax(3.8rem, 0.75fr)
       minmax(5.8rem, 1.4fr);
     gap: 0.14rem;
@@ -325,7 +313,7 @@ select {
 
   .table-header {
     padding: 0.08rem 0.28rem 0.2rem;
-    font-size: 0.54rem;
+    font-size: 0.77rem;
     line-height: 1.1;
   }
 
@@ -338,7 +326,7 @@ select {
   }
 
   .quantity-label {
-    font-size: 0.92rem;
+    font-size: 1.23rem;
   }
 
   .role-choice {
@@ -354,7 +342,7 @@ select {
   .value-cell input {
     min-height: 2.15rem;
     border-radius: 0.38rem;
-    font-size: 0.86rem;
+    font-size: 1.17rem;
   }
 
   .value-cell input {
@@ -363,7 +351,7 @@ select {
 
   .selection-summary {
     max-width: 9rem;
-    font-size: 0.58rem;
+    font-size: 0.83rem;
     line-height: 1.25;
     padding-bottom: 0;
   }
@@ -371,7 +359,7 @@ select {
   .status {
     min-height: 0.7rem;
     padding: 0.2rem 0.25rem 0;
-    font-size: 0.56rem;
+    font-size: 0.8rem;
     line-height: 1.1;
   }
 
@@ -381,9 +369,9 @@ select {
   }
 
   .keypad button {
-    min-height: 2.55rem;
+    min-height: 3.1rem;
     border-radius: 0.5rem;
-    font-size: 0.92rem;
+    font-size: 1.4rem;
   }
 }
 
@@ -397,7 +385,7 @@ select {
   }
 
   h1 {
-    font-size: 1.15rem;
+    font-size: 1.4rem;
   }
 
   .quantity-row {
@@ -425,6 +413,6 @@ select {
   }
 
   .keypad button {
-    min-height: 2.2rem;
+    min-height: 2.65rem;
   }
 }

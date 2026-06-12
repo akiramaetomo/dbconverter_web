@@ -8,24 +8,24 @@ import {
 import { toBaseValue } from "./units";
 
 export function calculate(
-  fixed: SelectedValue,
-  input: SelectedValue,
+  first: SelectedValue,
+  second: SelectedValue,
 ): CalculationResult {
-  const fixedGroup = quantityGroup[fixed.quantity];
-  const inputGroup = quantityGroup[input.quantity];
+  const firstGroup = quantityGroup[first.quantity];
+  const secondGroup = quantityGroup[second.quantity];
 
-  if (fixedGroup === inputGroup) {
-    throw new Error("FIXED and INPUT must use different quantity groups");
+  if (firstGroup === secondGroup) {
+    throw new Error("Selected values must use different quantity groups");
   }
 
   const known = new Map<LinearQuantity, number>([
-    [fixedGroup, toLinearValue(fixed)],
-    [inputGroup, toLinearValue(input)],
+    [firstGroup, toLinearValue(first)],
+    [secondGroup, toLinearValue(second)],
   ]);
   const values = calculateLinearValues(known);
 
   return {
-    selected: [fixed.quantity, input.quantity],
+    selected: [first.quantity, second.quantity],
     values: {
       ...values,
       voltageLevel: 20 * Math.log10(values.voltage),
@@ -84,4 +84,3 @@ function calculateLinearValues(
 
   throw new Error("Exactly two different quantity groups are required");
 }
-
