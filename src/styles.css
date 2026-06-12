@@ -1,0 +1,430 @@
+:root {
+  --page: #181b1d;
+  --surface: #23272a;
+  --surface-raised: #2a2f32;
+  --impedance: #4a3032;
+  --voltage: #504b2d;
+  --current: #40384f;
+  --power: #2f4555;
+  --text: #d8dddf;
+  --muted: #a6b0b4;
+  --result: #87b98b;
+  --error: #d07a78;
+  --fixed: #c4a66a;
+  --input: #80aeb5;
+  color: var(--text);
+  background: var(--page);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 50% -15%, #293235 0%, transparent 42%),
+    var(--page);
+}
+
+button,
+input,
+select {
+  color: inherit;
+  font: inherit;
+}
+
+button,
+select,
+input {
+  border: 0;
+}
+
+.shell {
+  width: min(100%, 46rem);
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+h1,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(1.65rem, 5vw, 2.3rem);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.eyebrow,
+.selection-summary,
+.table-header,
+.status,
+.field-error {
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.selection-summary {
+  padding-bottom: 0.25rem;
+  color: var(--input);
+  text-align: right;
+}
+
+.calculator {
+  padding: 0.65rem;
+  border: 1px solid #ffffff13;
+  border-radius: 1rem;
+  background: #11141699;
+  box-shadow: 0 1rem 3rem #00000038;
+}
+
+.table-header,
+.quantity-row {
+  display: grid;
+  grid-template-columns: 2.8rem 3.1rem 3.1rem minmax(4.4rem, 0.7fr) minmax(8rem, 2fr);
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.table-header {
+  padding: 0.2rem 0.55rem 0.5rem;
+  text-align: center;
+}
+
+.table-header span:last-child {
+  text-align: left;
+}
+
+.quantity-row {
+  position: relative;
+  min-height: 4.15rem;
+  margin-bottom: 0.35rem;
+  padding: 0.4rem;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: 0.72rem;
+  transition: border-color 120ms ease, filter 120ms ease, transform 120ms ease;
+}
+
+.quantity-row:last-child {
+  margin-bottom: 0;
+}
+
+.quantity-row::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  opacity: 0.72;
+}
+
+.group-impedance::before { background: var(--impedance); }
+.group-voltage::before { background: var(--voltage); }
+.group-current::before { background: var(--current); }
+.group-power::before { background: var(--power); }
+
+.quantity-row.is-fixed {
+  border-color: var(--fixed);
+}
+
+.quantity-row.is-input {
+  border-color: var(--input);
+}
+
+.quantity-row.is-fixed.is-input {
+  border-color: var(--error);
+}
+
+.quantity-row.is-active {
+  filter: brightness(1.1);
+}
+
+.quantity-label {
+  color: #eef1f2;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.role-choice {
+  display: grid;
+  place-items: center;
+  height: 2.35rem;
+  cursor: pointer;
+}
+
+.role-choice input {
+  position: absolute;
+  opacity: 0;
+}
+
+.role-choice span {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #c9d0d255;
+  border-radius: 50%;
+  background: #00000022;
+  transition: 120ms ease;
+}
+
+.role-choice input:checked + span {
+  border-color: var(--fixed);
+  box-shadow: inset 0 0 0 0.27rem #15191b;
+  background: var(--fixed);
+}
+
+.role-choice input[name="input"]:checked + span {
+  border-color: var(--input);
+  background: var(--input);
+}
+
+.role-choice input:disabled + span {
+  opacity: 0.18;
+  cursor: not-allowed;
+}
+
+select,
+.value-cell input {
+  width: 100%;
+  min-height: 2.65rem;
+  border: 1px solid #ffffff18;
+  border-radius: 0.48rem;
+  outline: none;
+  background: #111517a8;
+}
+
+select {
+  padding: 0 0.45rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+.value-cell {
+  position: relative;
+}
+
+.value-cell input {
+  padding: 0 0.7rem;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 1.05rem;
+}
+
+.value-cell input:focus {
+  border-color: var(--input);
+  box-shadow: 0 0 0 2px #80aeb526;
+}
+
+.is-calculated .value-cell input {
+  color: var(--result);
+}
+
+.has-error .value-cell input {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.field-error {
+  position: absolute;
+  right: 0.35rem;
+  bottom: -0.1rem;
+  max-width: calc(100% - 0.7rem);
+  overflow: hidden;
+  color: var(--error);
+  font-size: 0.48rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  min-height: 1rem;
+  padding: 0.55rem 0.4rem 0.05rem;
+  text-align: right;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.keypad button {
+  min-height: 3.1rem;
+  border: 1px solid #ffffff14;
+  border-radius: 0.65rem;
+  background: linear-gradient(#30373a, #272d30);
+  box-shadow: 0 0.18rem 0 #101315;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.keypad button:hover {
+  filter: brightness(1.12);
+}
+
+.keypad button:active {
+  transform: translateY(0.12rem);
+  box-shadow: 0 0.05rem 0 #101315;
+}
+
+.keypad .answer {
+  border-color: #c4a66a55;
+  color: #d7c68c;
+  background: linear-gradient(#494530, #383729);
+}
+
+@media (max-width: 560px) {
+  .shell {
+    padding: 0.4rem;
+  }
+
+  .app-header {
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .eyebrow {
+    display: none;
+  }
+
+  h1 {
+    font-size: clamp(1.25rem, 6vw, 1.55rem);
+    line-height: 1.1;
+  }
+
+  .calculator {
+    padding: 0.25rem;
+    border-radius: 0.6rem;
+  }
+
+  .table-header,
+  .quantity-row {
+    grid-template-columns:
+      2rem 2.45rem 2.45rem
+      minmax(3.8rem, 0.75fr)
+      minmax(5.8rem, 1.4fr);
+    gap: 0.14rem;
+  }
+
+  .table-header {
+    padding: 0.08rem 0.28rem 0.2rem;
+    font-size: 0.54rem;
+    line-height: 1.1;
+  }
+
+  .quantity-row {
+    min-height: 3.05rem;
+    margin-bottom: 0.18rem;
+    padding: 0.18rem;
+    border-width: 1px;
+    border-radius: 0.52rem;
+  }
+
+  .quantity-label {
+    font-size: 0.92rem;
+  }
+
+  .role-choice {
+    height: 2rem;
+  }
+
+  .role-choice span {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  select,
+  .value-cell input {
+    min-height: 2.15rem;
+    border-radius: 0.38rem;
+    font-size: 0.86rem;
+  }
+
+  .value-cell input {
+    padding: 0 0.42rem;
+  }
+
+  .selection-summary {
+    max-width: 9rem;
+    font-size: 0.58rem;
+    line-height: 1.25;
+    padding-bottom: 0;
+  }
+
+  .status {
+    min-height: 0.7rem;
+    padding: 0.2rem 0.25rem 0;
+    font-size: 0.56rem;
+    line-height: 1.1;
+  }
+
+  .keypad {
+    gap: 0.3rem;
+    margin-top: 0.45rem;
+  }
+
+  .keypad button {
+    min-height: 2.55rem;
+    border-radius: 0.5rem;
+    font-size: 0.92rem;
+  }
+}
+
+@media (max-width: 560px) and (max-height: 700px) {
+  .shell {
+    padding-block: 0.25rem;
+  }
+
+  .app-header {
+    margin-bottom: 0.2rem;
+  }
+
+  h1 {
+    font-size: 1.15rem;
+  }
+
+  .quantity-row {
+    min-height: 2.7rem;
+    margin-bottom: 0.12rem;
+    padding-block: 0.1rem;
+  }
+
+  .role-choice {
+    height: 1.8rem;
+  }
+
+  select,
+  .value-cell input {
+    min-height: 1.9rem;
+  }
+
+  .status {
+    padding-top: 0.1rem;
+  }
+
+  .keypad {
+    gap: 0.22rem;
+    margin-top: 0.3rem;
+  }
+
+  .keypad button {
+    min-height: 2.2rem;
+  }
+}
